@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheBrainTextParser", "TheBrainTextParser\TheBrainTextParser.csproj", "{4DF03A6B-0638-4DA1-9D6C-09B4113B64D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheBrainTextParser", "TheBrainTextParser\TheBrainTextParser.csproj", "{4DF03A6B-0638-4DA1-9D6C-09B4113B64D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheBrainTextParser.UnitTest", "TheBrainTextParser.UnitTest\TheBrainTextParser.UnitTest.csproj", "{88FB1A3E-D351-4C83-B9D5-58BA9D69FD5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{4DF03A6B-0638-4DA1-9D6C-09B4113B64D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DF03A6B-0638-4DA1-9D6C-09B4113B64D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DF03A6B-0638-4DA1-9D6C-09B4113B64D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88FB1A3E-D351-4C83-B9D5-58BA9D69FD5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88FB1A3E-D351-4C83-B9D5-58BA9D69FD5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88FB1A3E-D351-4C83-B9D5-58BA9D69FD5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88FB1A3E-D351-4C83-B9D5-58BA9D69FD5F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
