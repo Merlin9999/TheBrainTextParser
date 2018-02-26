@@ -53,5 +53,10 @@ namespace TheBrainTextParser
 
         private int ForcedMonth => this.Month == null || this.Month.Value < 1 ? 1 : this.Month.Value;
         private int ForcedDay => this.Day == null || this.Day.Value < 1 ? 1 : this.Day.Value;
+
+        public override string ToString()
+        {
+            return this.AsLocalDateTime().ToString();
+        }
     }
 }
