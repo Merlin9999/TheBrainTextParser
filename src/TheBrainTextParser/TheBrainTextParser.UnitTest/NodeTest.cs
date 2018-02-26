@@ -85,6 +85,58 @@ namespace TheBrainTextParser.UnitTest
             rootNode.Children[0].Children[0].Children.Should().HaveCount(4);
             rootNode.Children[1].Children.Should().HaveCount(3);
         }
+
+        [Fact]
+        public void ReadAeonGroupEvent()
+        {
+            Node rootNode = Node.Read(NodeLinesWithoutNotes);
+
+            AeonEvent groupEvent = AeonEvent.ReadOneNode(rootNode.Children[0]);
+            groupEvent.Should().NotBeNull();
+            groupEvent.Text.Should().BeEquivalentTo("Peace");
+        }
+
+        [Fact]
+        public void ReadAeonEvent()
+        {
+            Node rootNode = Node.Read(NodeLinesWithoutNotes);
+
+            AeonEvent aeonEvent = AeonEvent.ReadOneNode(rootNode.Children[0].Children[0]);
+            aeonEvent.Should().NotBeNull();
+            aeonEvent.Text.Should().BeEquivalentTo("Peace Demonstrations");
+            aeonEvent.Start.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2018, Month = 6, Day = 1 });
+            aeonEvent.End.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2020, Month = 9, Day = 17 });
+        }
+
+        [Fact]
+        public void ReadEmptyTextAeonEvent()
+        {
+            Node node = new Node();
+            AeonEvent aeonEvent = AeonEvent.ReadOneNode(node);
+            aeonEvent.Should().NotBeNull();
+            aeonEvent.Text.Should().BeEquivalentTo(string.Empty);
+        }
+
+
+        [Fact]
+        public void ReadAeonEvents()
+        {
+            Node rootNode = Node.Read(NodeLinesWithoutNotes);
+            IAeonEvent rootAeonEvent = AeonEvent.Read(rootNode);
+            
+            rootAeonEvent.Children.Should().HaveCount(2);
+            rootAeonEvent.Children[0].Children.Should().HaveCount(3);
+            rootAeonEvent.Children[0].Children[0].Children.Should().HaveCount(4);
+            rootAeonEvent.Children[1].Children.Should().HaveCount(3);
+
+            IAeonEvent aeonEvent = rootAeonEvent.Children[0];
+            aeonEvent.Start.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2018, Month = 6, Day = 1 }, $"Start Date for {nameof(IAeonEvent)} with Text of \"{aeonEvent.Text}\"");
+            aeonEvent.End.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2025, Month = 2, Day = 27 }, $"End Date for {nameof(IAeonEvent)} with Text of \"{aeonEvent.Text}\"");
+
+            aeonEvent = rootAeonEvent.Children[0].Children[0];
+            aeonEvent.Start.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2018, Month = 6, Day = 1 }, $"Start Date for {nameof(IAeonEvent)} with Text of \"{aeonEvent.Text}\"");
+            aeonEvent.End.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2020, Month = 9, Day = 17 }, $"End Date for {nameof(IAeonEvent)} with Text of \"{aeonEvent.Text}\"");
+        }
     }
 
     public interface IAeonEvent
@@ -97,56 +149,97 @@ namespace TheBrainTextParser.UnitTest
         List<IAeonEvent> Children { get; }
     }
 
-    public class AeonGroupEvent : IAeonEvent
+    public class AeonEvent : IAeonEvent
     {
-        private static readonly Regex EventGroupRegex = new Regex(@"^([0-9]+ [-] )(?<Name>.+)?$");
+        private static readonly Regex EventRegex = new Regex(@"^\s*((?<Start>[.0-9]{1,15})( *[-] *(?<End>[.0-9]{1,15}))? *[-] *)?(?<Name>.*)$");
+        private AeonTimelineDate _start;
+        private AeonTimelineDate _end;
 
-        public static AeonGroupEvent Read(string line)
+        public static IAeonEvent Read(Node node)
         {
-            Match match = EventGroupRegex.Match(line);
+            IAeonEvent aeonEvent = AeonEvent.ReadOneNode(node);
+            if (aeonEvent == null)
+                return null;
+            foreach (Node childNode in node.Children)
+            {
+                IAeonEvent childEvent = AeonEvent.Read(childNode);
+                if (childEvent == null)
+                    throw new ArgumentException($"Invalid child Node \"{childNode.Line}\"", nameof(node));
+                aeonEvent.Children.Add(childEvent);
+            }
+
+            return aeonEvent;
+        }
+
+        public static AeonEvent ReadOneNode(Node node)
+        {
+            Match match = EventRegex.Match(node.Line);
             if (!match.Success)
                 return null;
 
-            Group group = match.Groups["Name"];
-            AeonGroupEvent aeonGroup = AeonGroupEvent.Read(group.Value);
+            Group startGroup = match.Groups["Start"];
+            Group endGroup = match.Groups["End"];
+            Group nameGroup = match.Groups["Name"];
 
-            return aeonGroup;
+            string tempText = nameGroup?.Value;
+            if (tempText == null)
+                return null;
+            AeonEvent aeonEvent = new AeonEvent(tempText);
+
+            aeonEvent.Start = ParseAeonTimelineDate(startGroup);
+            aeonEvent.End = ParseAeonTimelineDate(endGroup);
+
+            return aeonEvent;
         }
 
-        private AeonGroupEvent(string line)
+        private static AeonTimelineDate ParseAeonTimelineDate(Group group)
         {
-            this.Text = line.Trim();
+            if (@group != null)
+            {
+                string temp = @group.Value;
+                int yearLength = temp.IndexOf('.');
+                if (yearLength < 0)
+                    yearLength = temp.Length;
+                if (yearLength >= 4)
+                    return AeonTimelineDate.Parse(group.Value);
+            }
+            return null;
+        }
+
+        private AeonEvent(string text)
+        {
+            this.Text = text;
             this.Children = new List<IAeonEvent>();
         }
 
         public string Text { get; set; }
 
-        public AeonTimelineDate Start => this.Children
-            .Select(e => new {ChildEvent = e, StartDateTime = e.Start.AsDateTime()})
-            .OrderBy(x => x.StartDateTime)
-            .First()
-            .ChildEvent
-            .Start;
+        public AeonTimelineDate Start
+        {
+            get => this._start ?? this.Children
+                       .Select(e => new {ChildEvent = e, StartDateTime = e.Start.AsDateTime()})
+                       .OrderBy(x => x.StartDateTime)
+                       .FirstOrDefault()
+                       ?.ChildEvent
+                       .Start;
+            set => this._start = value;
+        }
 
-        public AeonTimelineDate End => this.Children
-            .Select(e => new {ChildEvent = e, EndDateTime = e.End.AsDateTime()})
-            .OrderByDescending(x => x.EndDateTime)
-            .First()
-            .ChildEvent
-            .End;
+        public AeonTimelineDate End
+        {
+            get => this._end ?? this.Children
+                       .Select(e => new {ChildEvent = e, EndDateTime = e.End.AsDateTime()})
+                       .OrderByDescending(x => x.EndDateTime)
+                       .FirstOrDefault()
+                       ?.ChildEvent
+                       .End ?? this.Start;
+            set => this._end = value;
+        }
+
         public TimeSpan Duration => this.End.AsDateTime() - this.Start.AsDateTime();
 
         public List<IAeonEvent> Children { get; }
-    }
 
-    public class AeonEvent : IAeonEvent
-    {
-        public string Text { get; set; }
-        public AeonTimelineDate Start { get; set; }
-        public AeonTimelineDate End { get; set; }
-        public TimeSpan Duration => this.End.AsDateTime() - this.Start.AsDateTime();
-
-        public List<IAeonEvent> Children { get; }
     }
 
     public class Node
