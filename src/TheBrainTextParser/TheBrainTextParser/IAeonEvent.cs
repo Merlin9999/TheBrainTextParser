@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NodaTime;
 
 namespace TheBrainTextParser
 {
@@ -8,8 +9,10 @@ namespace TheBrainTextParser
         string Text { get; set; }
         AeonTimelineDate Start { get; }
         AeonTimelineDate End { get; }
-        TimeSpan Duration { get; }
+        Duration Duration { get; }
 
         List<IAeonEvent> Children { get; }
+
+        EventValidationResults Validate();
     }
 }

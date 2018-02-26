@@ -44,9 +44,11 @@ namespace TheBrainTextParser
 
         public static Node Read(string[] lines)
         {
-            var rootNodes = new List<Node>();
+            lines = TrimBlankLines(lines);
 
-            var readContext = new ReadContext(lines, rootNodes);
+            var rootNodes = new List<Node>();
+            
+            ReadContext readContext = new ReadContext(lines, rootNodes);
 
             while (readContext.Next())
                 ;
@@ -54,6 +56,12 @@ namespace TheBrainTextParser
             if (rootNodes.Count == 1)
                 return rootNodes[0];
             return new Node(string.Empty, rootNodes);
+        }
+
+        private static string[] TrimBlankLines(IEnumerable<string> lines)
+        {
+            return lines.SkipWhile(line => string.IsNullOrWhiteSpace(line))
+                .ToArray();
         }
 
         internal class ReadContext

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Bogus;
@@ -132,6 +133,23 @@ namespace TheBrainTextParser.UnitTest
             aeonEvent = rootAeonEvent.Children[0].Children[0];
             aeonEvent.Start.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2018, Month = 6, Day = 1 }, $"Start Date for {nameof(IAeonEvent)} with Text of \"{aeonEvent.Text}\"");
             aeonEvent.End.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2020, Month = 9, Day = 17 }, $"End Date for {nameof(IAeonEvent)} with Text of \"{aeonEvent.Text}\"");
+        }
+
+        [Fact]
+        public void ReadExportedData()
+        {
+            string nodeFileName = @"C:\Users\Marc\Desktop\TheBrain_Events.txt";
+            string[] lines = File.ReadAllLines(nodeFileName);
+            Node rootNode = Node.Read(lines);
+            IAeonEvent rootEvent = AeonEvent.Read(rootNode);
+            rootEvent.Should().NotBeNull();
+            rootEvent.Start.Should().NotBeNull();
+            EventValidationResults evr = rootEvent.Validate();
+            evr.Should().NotBeNull();
+            evr.IsValid.Should().Be(true, evr.ToString());
+            evr.Errors.Should().BeEmpty();
+            rootEvent.Start.Should().NotBeNull();
+            rootEvent.End.Should().NotBeNull();
         }
     }
 }

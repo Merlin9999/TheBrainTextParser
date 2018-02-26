@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
+using NodaTime;
 
 namespace TheBrainTextParser
 {
+    [DebuggerDisplay("Year: {Year}, Month: {Month}, Day: {Day} : {nameof(AeonTimelineDate)}")]
     public class AeonTimelineDate
     {
-        private static readonly Regex DateParseRegex = new Regex(@"^(?<Year>[0-9]{1,7})([.](?<Month>[0-9]{1,2})([.](?<Day>[0-9]{1,2}))?)?$");
+        private static readonly Regex DateParseRegex = new Regex(@"^(?<Year>(([0-9]{1,7})|([(][0-9]{1,7}[)])|([-][0-9]{1,7})))([.](?<Month>[0-9]{1,2})([.](?<Day>[0-9]{1,2}))?)?$");
 
         public static AeonTimelineDate Parse(string dateString)
         {
@@ -19,7 +22,7 @@ namespace TheBrainTextParser
             Group monthGroup = match.Groups["Month"];
             Group dayGroup = match.Groups["Day"];
 
-            date.Year = int.Parse(yearGroup.Value);
+            date.Year = int.Parse(yearGroup.Value.Replace('(', '-').Replace(")", string.Empty));
             date.Month = monthGroup.Success ? int.Parse(monthGroup.Value) : (int?) null;
             date.Day = dayGroup.Success ? int.Parse(dayGroup.Value) : (int?)null;
 
@@ -43,9 +46,9 @@ namespace TheBrainTextParser
         public int? Month { get; set; }
         public int? Day { get; set; }
 
-        public DateTime AsDateTime()
+        public LocalDateTime AsLocalDateTime()
         {
-            return new DateTime(this.Year, this.ForcedMonth, this.ForcedDay);
+            return new LocalDateTime(this.Year, this.ForcedMonth, this.ForcedDay, 0, 0);
         }
 
         private int ForcedMonth => this.Month == null || this.Month.Value < 1 ? 1 : this.Month.Value;

@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using NodaTime;
 
 namespace TheBrainTextParser
 {
     public class AeonEvent : IAeonEvent
     {
-        private static readonly Regex EventRegex = new Regex(@"^\s*((?<Start>[.0-9]{1,15})( *[-] *(?<End>[.0-9]{1,15}))? *[-] *)?(?<Name>.*)$");
+        private static readonly Regex EventRegex = new Regex(@"^\s*((?<Start>[.\(\)\-0-9]{1,15})( *[-] *(?<End>[.\(\)\-0-9]{1,15}))? *[-] *)?(?<Name>.*)$");
         private AeonTimelineDate _start;
         private AeonTimelineDate _end;
 
         public static IAeonEvent Read(Node node)
         {
-            IAeonEvent aeonEvent = AeonEvent.ReadOneNode(node);
+            AeonEvent aeonEvent = AeonEvent.ReadOneNode(node);
             if (aeonEvent == null)
                 return null;
             foreach (Node childNode in node.Children)
@@ -53,6 +54,7 @@ namespace TheBrainTextParser
             if (@group != null)
             {
                 string temp = @group.Value;
+                temp = temp.Trim('-', '(', ')');
                 int yearLength = temp.IndexOf('.');
                 if (yearLength < 0)
                     yearLength = temp.Length;
@@ -72,7 +74,7 @@ namespace TheBrainTextParser
 
         public AeonTimelineDate Start
         {
-            get => this._start ?? Enumerable.Select(this.Children, e => new {ChildEvent = e, StartDateTime = e.Start.AsDateTime()})
+            get => this._start ?? this.Children.Select(e => new {ChildEvent = e, StartDateTime = e.Start.AsLocalDateTime()})
                        .OrderBy(x => x.StartDateTime)
                        .FirstOrDefault()
                        ?.ChildEvent
@@ -82,7 +84,7 @@ namespace TheBrainTextParser
 
         public AeonTimelineDate End
         {
-            get => this._end ?? Enumerable.Select(this.Children, e => new {ChildEvent = e, EndDateTime = e.End.AsDateTime()})
+            get => this._end ?? this.Children.Select(e => new {ChildEvent = e, EndDateTime = e.End.AsLocalDateTime()})
                        .OrderByDescending(x => x.EndDateTime)
                        .FirstOrDefault()
                        ?.ChildEvent
@@ -90,9 +92,80 @@ namespace TheBrainTextParser
             set => this._end = value;
         }
 
-        public TimeSpan Duration => this.End.AsDateTime() - this.Start.AsDateTime();
+        public Duration Duration => this.End.AsLocalDateTime().InZoneLeniently(DateTimeZone.Utc).ToInstant() 
+            - this.Start.AsLocalDateTime().InZoneLeniently(DateTimeZone.Utc).ToInstant();
 
         public List<IAeonEvent> Children { get; }
+        public EventValidationResults Validate()
+        {
+            var evr = new EventValidationResults();
+            evr.IsValid = true;
+            this.ValidateEvents(evr, this);
+            return evr;
+        }
 
+        private void ValidateEvents(EventValidationResults evr, IAeonEvent aeonEvent)
+        {
+            foreach (IAeonEvent childEvent in aeonEvent.Children)
+            {
+                this.ValidateEvents(evr, childEvent);
+            }
+
+            try
+            {
+                string temp = aeonEvent.Text;
+            }
+            catch (Exception e)
+            {
+                evr.IsValid = false;
+                evr.Errors.Add(new EventValidationError()
+                {
+                    Message = $"Failed to access {nameof(this.Text)} property of event named <Idunno, {nameof(this.Text)} is not accessable>",
+                    Exception = e,
+                });
+            }
+
+            try
+            {
+                AeonTimelineDate temp = aeonEvent.Start;
+            }
+            catch (Exception e)
+            {
+                evr.IsValid = false;
+                evr.Errors.Add(new EventValidationError()
+                {
+                    Message = $"Failed to access {nameof(this.Start)} property of event named \"{this.Text}\"",
+                    Exception = e,
+                });
+            }
+
+            try
+            {
+                AeonTimelineDate temp = aeonEvent.End;
+            }
+            catch (Exception e)
+            {
+                evr.IsValid = false;
+                evr.Errors.Add(new EventValidationError()
+                {
+                    Message = $"Failed to access {nameof(this.End)} property of event named \"{this.Text}\"",
+                    Exception = e,
+                });
+            }
+
+            try
+            {
+                Duration temp = aeonEvent.Duration;
+            }
+            catch (Exception e)
+            {
+                evr.IsValid = false;
+                evr.Errors.Add(new EventValidationError()
+                {
+                    Message = $"Failed to access {nameof(this.Duration)} property of event named \"{this.Text}\"",
+                    Exception = e,
+                });
+            }
+        }
     }
 }

@@ -18,11 +18,9 @@ namespace TheBrainTextParser
 
         public static async Task RunOptionsAndReturnExitCodeAsync(ProgramArguments opts)
         {
-
-            EventRoot root = new EventRoot();
-            root.LoadFromFile(opts.InputFile);
-
-
+            string[] lines = File.ReadAllLines(opts.InputFile);
+            Node rootNode = Node.Read(lines);
+            IAeonEvent rootEvent = AeonEvent.Read(rootNode);
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)
