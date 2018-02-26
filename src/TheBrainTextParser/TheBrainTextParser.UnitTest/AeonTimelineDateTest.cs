@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
 using FluentAssertions.Common;
+using NodaTime;
 using Xunit;
 
 namespace TheBrainTextParser.UnitTest
@@ -42,6 +43,26 @@ namespace TheBrainTextParser.UnitTest
             AeonTimelineDate date = AeonTimelineDate.Parse(@"2014");
             date.Should().NotBeNull();
             date.Year.Should().Be(2014);
+            date.Month.Should().BeNull();
+            date.Day.Should().BeNull();
+        }
+
+        [Fact]
+        public void YearOnlyBCWithNegativeSign()
+        {
+            AeonTimelineDate date = AeonTimelineDate.Parse(@"-0201");
+            date.Should().NotBeNull();
+            date.Year.Should().Be(-201);
+            date.Month.Should().BeNull();
+            date.Day.Should().BeNull();
+        }
+
+        [Fact]
+        public void YearOnlyBCWithParentheses()
+        {
+            AeonTimelineDate date = AeonTimelineDate.Parse(@"(0201)");
+            date.Should().NotBeNull();
+            date.Year.Should().Be(-201);
             date.Month.Should().BeNull();
             date.Day.Should().BeNull();
         }
@@ -135,7 +156,7 @@ namespace TheBrainTextParser.UnitTest
         {
             AeonTimelineDate date = AeonTimelineDate.Parse(@"2014.12.18");
             date.Should().NotBeNull();
-            date.AsDateTime().Should().Be(new DateTime(2014, 12, 18));
+            date.AsLocalDateTime().Should().Be(new LocalDateTime(2014, 12, 18, 0, 0));
         }
 
         [Fact]
@@ -143,7 +164,7 @@ namespace TheBrainTextParser.UnitTest
         {
             AeonTimelineDate date = AeonTimelineDate.Parse(@"2014.12");
             date.Should().NotBeNull();
-            date.AsDateTime().Should().Be(new DateTime(2014, 12, 1));
+            date.AsLocalDateTime().Should().Be(new LocalDateTime(2014, 12, 1 ,0 ,0));
         }
 
         [Fact]
@@ -151,7 +172,7 @@ namespace TheBrainTextParser.UnitTest
         {
             AeonTimelineDate date = AeonTimelineDate.Parse(@"2014");
             date.Should().NotBeNull();
-            date.AsDateTime().Should().Be(new DateTime(2014, 1, 1));
+            date.AsLocalDateTime().Should().Be(new LocalDateTime(2014, 1, 1, 0, 0));
         }
     }
 }
