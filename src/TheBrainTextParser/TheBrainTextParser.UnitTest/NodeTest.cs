@@ -136,10 +136,12 @@ namespace TheBrainTextParser.UnitTest
         }
 
         [Fact]
-        public void ReadExportedData()
+        public void ReadExportedDataAndWriteCsv()
         {
-            string nodeFileName = @"C:\Users\Marc\Desktop\TheBrain_Events.txt";
-            string[] lines = File.ReadAllLines(nodeFileName);
+            string theBrainNodeTextFileName = @"C:\Users\Marc\Desktop\TheBrain_Events.txt";
+            string aeonTimelineEventFileNameCsv = @"C:\Users\Marc\Desktop\AeonTime_Events.csv";
+
+            string[] lines = File.ReadAllLines(theBrainNodeTextFileName);
             Node rootNode = Node.Read(lines);
             IAeonEvent rootEvent = AeonEvent.Read(rootNode);
             rootEvent.Should().NotBeNull();
@@ -150,6 +152,12 @@ namespace TheBrainTextParser.UnitTest
             evr.Errors.Should().BeEmpty();
             rootEvent.Start.Should().NotBeNull();
             rootEvent.End.Should().NotBeNull();
+
+            var csv = AeonTimelineCsv.Create(rootEvent);
+            csv.Should().NotBeNull();
+            csv.Rows.Should().NotBeNull();
+            csv.Rows.Should().HaveCount(72);
+            csv.Write(aeonTimelineEventFileNameCsv);
         }
     }
 }
