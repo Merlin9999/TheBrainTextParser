@@ -18,8 +18,7 @@ namespace TheBrainTextParser
 
         public static void GenerateCsv(IAeonEvent currentEvent, AeonTimelineCsv csv, List<int> eventId)
         {
-            string eventIdString = GenerateEventIdString(eventId);
-            csv.Rows.Add(new AeonTimelineCsvRow(currentEvent, eventIdString));
+            csv.Rows.Add(new AeonTimelineCsvRow(currentEvent, eventId));
 
             List<int> childEventId = new List<int>(eventId);
             childEventId.Add(0);
@@ -30,11 +29,6 @@ namespace TheBrainTextParser
 
                 GenerateCsv(childEvent, csv, childEventId);
             }
-        }
-
-        private static string GenerateEventIdString(List<int> eventId)
-        {
-            return eventId.Aggregate(string.Empty, (s, i) => s.Any() ? s + "." + i.ToString() : i.ToString());
         }
 
         public void Write(string fileName)
