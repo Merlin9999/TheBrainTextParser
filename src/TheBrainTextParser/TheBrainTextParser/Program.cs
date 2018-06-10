@@ -21,6 +21,9 @@ namespace TheBrainTextParser
             string[] lines = File.ReadAllLines(opts.InputFile);
             Node rootNode = Node.Read(lines);
             IAeonEvent rootEvent = AeonEvent.Read(rootNode);
+            EventValidationResults evr = rootEvent.Validate();
+            var csv = AeonTimelineCsv.Create(rootEvent);
+            csv.Write(opts.OutputFile);
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)
@@ -34,5 +37,7 @@ namespace TheBrainTextParser
     {
         [Option('i', "input", Required = true, HelpText = "Input files to be processed.")]
         public string InputFile { get; set; }
+        [Option('o', "output", Required = true, HelpText = "Output file to be processed.")]
+        public string OutputFile { get; set; }
     }
 }

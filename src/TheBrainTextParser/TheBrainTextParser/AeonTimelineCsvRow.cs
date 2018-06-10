@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace TheBrainTextParser
 {
-    [DebuggerDisplay("EventId: {EventId}, Start: {Start}, End: {End}, Duration: {Duration}, Title: \"{Title}\"")]
+    [DebuggerDisplay("EventId: {EventId}, Start: {Start}, End: {End}, Period: {Duration}, Title: \"{Title}\"")]
     public class AeonTimelineCsvRow
     {
         public AeonTimelineCsvRow(IAeonEvent aeonEvent, List<int> eventId)
@@ -18,7 +18,7 @@ namespace TheBrainTextParser
                 : string.Empty;
             this.Title = aeonEvent.Text;
             this.Start = aeonEvent.Start.ToString();
-            this.Duration = aeonEvent.Duration.Days + " Days";
+            this.Duration = aeonEvent.Period.Days + " Days";
             this.End = aeonEvent.End.ToString();
         }
 

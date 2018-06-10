@@ -8,7 +8,7 @@ namespace TheBrainTextParser
 {
     public class AeonEvent : IAeonEvent
     {
-        private static readonly Regex EventRegex = new Regex(@"^\s*((?<Start>[.\(\)\-0-9]{1,15})( *[-] *(?<End>[.\(\)\-0-9]{1,15}))? *[-] *)?(?<Name>.*)$");
+        private static readonly Regex EventRegex = new Regex(@"^[\s_]*((?<Start>[.\(\)\-0-9]{1,15})([\s]*[-][\s_]*(?<End>[.\(\)\-0-9]{1,15}))?\s*[-]\s*)?(?<Name>.*)$");
         private AeonTimelineDate _start;
         private AeonTimelineDate _end;
 
@@ -74,8 +74,8 @@ namespace TheBrainTextParser
 
         public AeonTimelineDate Start
         {
-            get => this._start ?? this.Children.Select(e => new {ChildEvent = e, StartDateTime = e.Start.AsLocalDateTime()})
-                       .OrderBy(x => x.StartDateTime)
+            get => this._start ?? this.Children.Select(e => new {ChildEvent = e, StartDate = e.Start.AsLocalDate()})
+                       .OrderBy(x => x.StartDate)
                        .FirstOrDefault()
                        ?.ChildEvent
                        .Start;
@@ -84,16 +84,15 @@ namespace TheBrainTextParser
 
         public AeonTimelineDate End
         {
-            get => this._end ?? this.Children.Select(e => new {ChildEvent = e, EndDateTime = e.End.AsLocalDateTime()})
-                       .OrderByDescending(x => x.EndDateTime)
+            get => this._end ?? this.Children.Select(e => new {ChildEvent = e, EndDate = e.End.AsLocalDate()})
+                       .OrderByDescending(x => x.EndDate)
                        .FirstOrDefault()
                        ?.ChildEvent
                        .End ?? this.Start;
             set => this._end = value;
         }
 
-        public Duration Duration => this.End.AsLocalDateTime().InZoneLeniently(DateTimeZone.Utc).ToInstant() 
-            - this.Start.AsLocalDateTime().InZoneLeniently(DateTimeZone.Utc).ToInstant();
+        public Period Period => this.End.AsLocalDate() - this.Start.AsLocalDate();
 
         public List<IAeonEvent> Children { get; }
         public EventValidationResults Validate()
@@ -155,14 +154,14 @@ namespace TheBrainTextParser
 
             try
             {
-                Duration temp = aeonEvent.Duration;
+                Period temp = aeonEvent.Period;
             }
             catch (Exception e)
             {
                 evr.IsValid = false;
                 evr.Errors.Add(new EventValidationError()
                 {
-                    Message = $"Failed to access {nameof(this.Duration)} property of event named \"{this.Text}\"",
+                    Message = $"Failed to access {nameof(this.Period)} property of event named \"{this.Text}\"",
                     Exception = e,
                 });
             }

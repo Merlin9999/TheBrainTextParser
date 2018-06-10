@@ -9,7 +9,7 @@ namespace TheBrainTextParser
         string Text { get; set; }
         AeonTimelineDate Start { get; }
         AeonTimelineDate End { get; }
-        Duration Duration { get; }
+        Period Period { get; }
 
         List<IAeonEvent> Children { get; }
 

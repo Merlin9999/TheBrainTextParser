@@ -156,7 +156,7 @@ namespace TheBrainTextParser.UnitTest
         {
             AeonTimelineDate date = AeonTimelineDate.Parse(@"2014.12.18");
             date.Should().NotBeNull();
-            date.AsLocalDateTime().Should().Be(new LocalDateTime(2014, 12, 18, 0, 0));
+            date.AsLocalDate().Should().Be(new LocalDate(2014, 12, 18));
         }
 
         [Fact]
@@ -164,7 +164,7 @@ namespace TheBrainTextParser.UnitTest
         {
             AeonTimelineDate date = AeonTimelineDate.Parse(@"2014.12");
             date.Should().NotBeNull();
-            date.AsLocalDateTime().Should().Be(new LocalDateTime(2014, 12, 1 ,0 ,0));
+            date.AsLocalDate().Should().Be(new LocalDate(2014, 12, 1));
         }
 
         [Fact]
@@ -172,7 +172,18 @@ namespace TheBrainTextParser.UnitTest
         {
             AeonTimelineDate date = AeonTimelineDate.Parse(@"2014");
             date.Should().NotBeNull();
-            date.AsLocalDateTime().Should().Be(new LocalDateTime(2014, 1, 1, 0, 0));
+            date.AsLocalDate().Should().Be(new LocalDate(2014, 1, 1));
+        }
+
+        [Fact]
+        public void NegativeYearOnly()
+        {
+            AeonTimelineDate date = AeonTimelineDate.Parse(@"-0500");
+            date.Should().NotBeNull();
+            date.Year.Should().Be(-500);
+            date.Month.Should().BeNull();
+            date.Day.Should().BeNull();
+            date.ToString().Should().BeEquivalentTo("0500-01-01 B.C.");
         }
     }
 }

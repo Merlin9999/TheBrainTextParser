@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using NodaTime;
+using NodaTime.Calendars;
 
 namespace TheBrainTextParser
 {
@@ -46,9 +48,11 @@ namespace TheBrainTextParser
         public int? Month { get; set; }
         public int? Day { get; set; }
 
-        public LocalDateTime AsLocalDateTime()
+        public LocalDate AsLocalDate()
         {
-            return new LocalDateTime(this.Year, this.ForcedMonth, this.ForcedDay, 0, 0);
+            if (this.Year < 0)
+                return new LocalDate(Era.BeforeCommon, -this.Year, this.ForcedMonth, this.ForcedDay);
+            return new LocalDate(Era.Common, this.Year, this.ForcedMonth, this.ForcedDay);
         }
 
         private int ForcedMonth => this.Month == null || this.Month.Value < 1 ? 1 : this.Month.Value;
@@ -56,7 +60,10 @@ namespace TheBrainTextParser
 
         public override string ToString()
         {
-            return this.AsLocalDateTime().ToString();
+            if (this.Year < 1)
+                return this.AsLocalDate().ToString("MM/dd/yyyy", CultureInfo.InvariantCulture) + " BC";
+
+            return this.AsLocalDate().ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
         }
     }
 }
