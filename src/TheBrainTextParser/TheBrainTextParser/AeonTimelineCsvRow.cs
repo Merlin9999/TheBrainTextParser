@@ -17,9 +17,9 @@ namespace TheBrainTextParser
                 ? GenerateEventIdString(eventId.Take(eventId.Count - 1).ToList())
                 : string.Empty;
             this.Title = aeonEvent.Text;
-            this.Start = aeonEvent.Start.ToString();
-            this.Duration = aeonEvent.Period.Days + " Days";
-            this.End = aeonEvent.End.ToString();
+            this.Start = aeonEvent.Start.AsString();
+            this.Duration = aeonEvent.Duration == null ? string.Empty : aeonEvent.Duration.Value.Days + " Days";
+            this.End = aeonEvent.End.AsString();
         }
 
         private static string GenerateEventIdString(List<int> eventId)

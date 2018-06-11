@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Bogus;
 using FluentAssertions;
+using NodaTime;
 using Xunit;
 
 namespace TheBrainTextParser.UnitTest
@@ -103,6 +104,7 @@ namespace TheBrainTextParser.UnitTest
             aeonEvent.Text.Should().BeEquivalentTo("Peace Demonstrations");
             aeonEvent.Start.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2018, Month = 6, Day = 1 });
             aeonEvent.End.Should().BeEquivalentTo(new AeonTimelineDate() { Year = 2020, Month = 9, Day = 17 });
+            aeonEvent.Duration.Should().BeEquivalentTo(Duration.FromDays(839));
         }
 
         [Fact]

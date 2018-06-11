@@ -44,26 +44,42 @@ namespace TheBrainTextParser
             return date;
         }
 
+        public override string ToString()
+        {
+            return this.AsString();
+        }
+
         public int Year { get; set; }
         public int? Month { get; set; }
         public int? Day { get; set; }
 
-        public LocalDate AsLocalDate()
+        protected internal int ForcedMonth => this.Month == null || this.Month.Value < 1 ? 1 : this.Month.Value;
+        protected internal int ForcedDay => this.Day == null || this.Day.Value < 1 ? 1 : this.Day.Value;
+    }
+
+    public static class AeontimelineDateExtensions
+    {
+        public static LocalDate? AsLocalDate(this AeonTimelineDate _this)
         {
-            if (this.Year < 0)
-                return new LocalDate(Era.BeforeCommon, -this.Year, this.ForcedMonth, this.ForcedDay);
-            return new LocalDate(Era.Common, this.Year, this.ForcedMonth, this.ForcedDay);
+            if (_this == null)
+                return null;
+
+            return _this.Year < 0 
+                ? new LocalDate(Era.BeforeCommon, -_this.Year, _this.ForcedMonth, _this.ForcedDay) 
+                : new LocalDate(Era.Common, _this.Year, _this.ForcedMonth, _this.ForcedDay);
         }
 
-        private int ForcedMonth => this.Month == null || this.Month.Value < 1 ? 1 : this.Month.Value;
-        private int ForcedDay => this.Day == null || this.Day.Value < 1 ? 1 : this.Day.Value;
-
-        public override string ToString()
+        internal static string AsString(this AeonTimelineDate _this)
         {
-            if (this.Year < 1)
-                return this.AsLocalDate().ToString("MM/dd/yyyy", CultureInfo.InvariantCulture) + " BC";
+            LocalDate? localDate = _this.AsLocalDate();
 
-            return this.AsLocalDate().ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
+            if (localDate == null)
+                return string.Empty;
+            
+            if (_this.Year < 1)
+                return localDate.Value.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture) + " BC";
+
+            return localDate.Value.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
         }
     }
 }

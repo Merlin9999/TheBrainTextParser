@@ -183,7 +183,7 @@ namespace TheBrainTextParser.UnitTest
             date.Year.Should().Be(-500);
             date.Month.Should().BeNull();
             date.Day.Should().BeNull();
-            date.ToString().Should().BeEquivalentTo("0500-01-01 B.C.");
+            date.ToString().Should().BeEquivalentTo("01/01/0500 BC");
         }
     }
 }

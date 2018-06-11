@@ -74,8 +74,9 @@ namespace TheBrainTextParser
 
         public AeonTimelineDate Start
         {
-            get => this._start ?? this.Children.Select(e => new {ChildEvent = e, StartDate = e.Start.AsLocalDate()})
-                       .OrderBy(x => x.StartDate)
+            get => this._start
+                   ?? this.Children.Select(e => new {ChildEvent = e, ChildStartDate = e.Start.AsLocalDate() ?? e.Start.AsLocalDate()})
+                       .OrderBy(x => x.ChildStartDate)
                        .FirstOrDefault()
                        ?.ChildEvent
                        .Start;
@@ -84,15 +85,30 @@ namespace TheBrainTextParser
 
         public AeonTimelineDate End
         {
-            get => this._end ?? this.Children.Select(e => new {ChildEvent = e, EndDate = e.End.AsLocalDate()})
-                       .OrderByDescending(x => x.EndDate)
+            get => this._end ?? this.Children.Select(e => new {ChildEvent = e, ChildEndDate = e.End.AsLocalDate()})
+                       .OrderByDescending(x => x.ChildEndDate)
                        .FirstOrDefault()
                        ?.ChildEvent
                        .End ?? this.Start;
             set => this._end = value;
         }
 
-        public Period Period => this.End.AsLocalDate() - this.Start.AsLocalDate();
+        public Duration? Duration
+        {
+            get
+            {
+                LocalDate? startLocalDate = this.Start.AsLocalDate();
+                LocalDate? endLocalDate = this.End.AsLocalDate();
+                if (startLocalDate == null || endLocalDate == null)
+                    return null;
+                return endLocalDate.Value.AtMidnight().InZoneLeniently(DateTimeZone.Utc).ToInstant()
+                       - startLocalDate.Value.AtMidnight().InZoneLeniently(DateTimeZone.Utc).ToInstant();
+
+            //public Duration Duration => this.End.AsLocalDateTime().InZoneLeniently(DateTimeZone.Utc).ToInstant()
+            //                            - this.Start.AsLocalDateTime().InZoneLeniently(DateTimeZone.Utc).ToInstant();
+
+    }
+}
 
         public List<IAeonEvent> Children { get; }
         public EventValidationResults Validate()
@@ -154,14 +170,14 @@ namespace TheBrainTextParser
 
             try
             {
-                Period temp = aeonEvent.Period;
+                Duration? temp = aeonEvent.Duration;
             }
             catch (Exception e)
             {
                 evr.IsValid = false;
                 evr.Errors.Add(new EventValidationError()
                 {
-                    Message = $"Failed to access {nameof(this.Period)} property of event named \"{this.Text}\"",
+                    Message = $"Failed to access {nameof(this.Duration)} property of event named \"{this.Text}\"",
                     Exception = e,
                 });
             }
